@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import {
 	ESTADO_FAMILIA_META,
 	integrantesDe,
@@ -10,7 +11,6 @@ import {
 	toCsvFamilias,
 	fetchBdInterno,
 	guardarAsistenciaRemota,
-	guardarResponsableRemoto,
 	uid,
 	hoyPartes,
 	type Familia,
@@ -206,11 +206,11 @@ export default function PanelBoda() {
 		? (familias.find((f) => f.id_familia === seleccionada) ?? null)
 		: null;
 
-	function pushLog(familiaNombre: string, evento: string) {
+	function pushLog(idFamilia: string, familiaNombre: string, evento: string) {
 		const { hora, fecha } = hoyPartes();
 		setLogs((prev) => [
 			...prev,
-			{ id_evento: uid("log"), familia: familiaNombre, evento, hora, fecha },
+			{ id_evento: uid("log"), id_familia: idFamilia, familia: familiaNombre, evento, hora, fecha },
 		]);
 	}
 
@@ -226,7 +226,7 @@ export default function PanelBoda() {
 					: i,
 			),
 		);
-		if (fam) pushLog(fam.nombre, `Cambió asistencia de ${nombre}`);
+		if (fam) pushLog(fam.id_familia, fam.nombre, `Cambió asistencia de ${nombre}`);
 		if (fam) {
 			void guardarAsistenciaRemota(
 				idFamilia,
@@ -239,36 +239,10 @@ export default function PanelBoda() {
 		}
 	}
 
-	function guardarResponsable(
-		idFamilia: string,
-		nombre: string,
-		telefono: string,
-	) {
-		setIntegrantes((prev) =>
-			prev.map((i) =>
-				i.id === idFamilia && i.nombre === nombre
-					? { ...i, responsable: telefono }
-					: i,
-			),
-		);
-		const fam = familias.find((f) => f.id_familia === idFamilia);
-		if (fam && telefono.trim())
-			pushLog(fam.nombre, `Asignó responsable ${telefono.trim()} a ${nombre}`);
-		mostrarAviso(`Responsable de ${nombre} guardado.`);
-		if (fam && telefono.trim()) {
-			void guardarResponsableRemoto(
-				idFamilia,
-				nombre,
-				telefono.trim(),
-				fam.nombre,
-			).catch(() =>
-				mostrarAviso("Guardado local; no se pudo escribir en el Sheet."),
-			);
-		}
-	}
-
 	function exportar() {
-		const blob = new Blob([toCsvFamilias(familiasVisibles)], { type: "text/csv;charset=utf-8" });
+		const blob = new Blob([toCsvFamilias(familiasVisibles)], {
+			type: "text/csv;charset=utf-8",
+		});
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
@@ -306,33 +280,20 @@ export default function PanelBoda() {
 			>
 				<div className="flex flex-col gap-6 p-6">
 					<div>
-						<div
-							aria-hidden="true"
-							className="mb-4 grid w-fit grid-cols-4 gap-[3px]"
-						>
-							{Array.from({ length: 8 }).map((_, i) => (
-								<span
-									key={i}
-									className="block h-3 w-3"
-									style={{
-										background:
-											i % 3 === 0 ? "#fff" : "rgb(255 255 255 / 0.28)",
-										borderRadius: 1,
-										outline: "1px solid rgb(255 255 255 / 0.5)",
-										outlineOffset: -1,
-									}}
-								/>
-							))}
-						</div>
+						<Image
+							src="/logo-boda-blanco.png"
+							alt="Monograma N+E — Boda"
+							width={120}
+							height={67}
+							priority
+							className="mb-4 h-auto w-[120px]"
+						/>
 						<p className="text-sm font-semibold uppercase tracking-[0.18em] opacity-80">
 							Boda · Panel
 						</p>
 						<h1 className="mt-1 text-3xl font-extrabold leading-tight tracking-tight">
 							Invitados
 						</h1>
-						<p className="mt-2 text-sm leading-6 opacity-85">
-							BD_INVITADOS: familias, integrantes y LOG por responsable.
-						</p>
 					</div>
 
 					<div className="rounded-md bg-white/10 p-4">
@@ -362,7 +323,7 @@ export default function PanelBoda() {
 							/>
 						</div>
 						<p className="mt-2 text-xs leading-5 opacity-85">
-							{totales.asisten} de {totales.cupo} plazas (cupo NUM_INVITADOS).
+							{totales.asisten} de {totales.cupo} plazas.
 						</p>
 					</div>
 
@@ -381,10 +342,6 @@ export default function PanelBoda() {
 							Copiar links
 						</button>
 					</div>
-
-					<p className="text-xs leading-5 opacity-70">
-						Datos en vivo de tu Google Sheet (BD_INVITADOS).
-					</p>
 				</div>
 			</aside>
 
@@ -393,9 +350,24 @@ export default function PanelBoda() {
 					className="flex items-center justify-between gap-3 px-4 pt-4 lg:hidden"
 					style={{ color: "var(--color-brand-deep)" }}
 				>
-					<p className="text-lg font-extrabold tracking-tight">
-						Boda · Invitados
-					</p>
+					<div className="flex items-center gap-3">
+						<span
+							className="inline-flex items-center rounded-md px-2 py-1"
+							style={{ background: "var(--color-brand-deep)" }}
+						>
+							<Image
+								src="/logo-boda-blanco.png"
+								alt="Monograma N+E — Boda"
+								width={64}
+								height={36}
+								priority
+								className="h-auto w-[64px]"
+							/>
+						</span>
+						<p className="text-lg font-extrabold tracking-tight">
+							Boda · Invitados
+						</p>
+					</div>
 					<span
 						className="rounded-full px-3 py-1 text-xs font-bold text-white"
 						style={{ background: "var(--color-brand-dark)" }}
@@ -569,7 +541,7 @@ export default function PanelBoda() {
 					</h2>
 					<section
 						aria-label="Resumen"
-						className="grid grid-cols-2 gap-3 xl:grid-cols-4"
+						className="grid grid-cols-2 gap-3 xl:grid-cols-3"
 					>
 						<div className="tile rounded-lg p-4">
 							<p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--color-brand-muted)]">
@@ -588,7 +560,7 @@ export default function PanelBoda() {
 							</p>
 						</div>
 						<div
-							className="tile rounded-lg p-4"
+							className="tile rounded-lg p-3"
 							style={{
 								background: "var(--color-brand-deep)",
 								borderColor: "var(--color-brand-deep)",
@@ -609,7 +581,7 @@ export default function PanelBoda() {
 								{totales.totalPers} integrantes registrados
 							</p>
 						</div>
-						<div className="tile rounded-lg p-4">
+						<div className="tile rounded-lg p-3">
 							<p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--color-brand-muted)]">
 								Cupo total
 							</p>
@@ -621,25 +593,6 @@ export default function PanelBoda() {
 							>
 								<span className="flap">{totales.cupo}</span>
 							</p>
-							<p className="mt-2 text-[13px] font-semibold leading-5 text-[var(--color-brand-muted)]">
-								Suma de NUM_INVITADOS
-							</p>
-						</div>
-						<div className="tile rounded-lg p-4">
-							<p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--color-brand-muted)]">
-								Sin responsable
-							</p>
-							<p
-								className="mt-1 text-4xl font-extrabold tracking-tight"
-								style={{ color: "var(--color-clay-ink)" }}
-								aria-live="polite"
-								key={totales.sinResp}
-							>
-								<span className="flap">{totales.sinResp}</span>
-							</p>
-							<p className="mt-2 text-[13px] font-semibold leading-5 text-[var(--color-brand-muted)]">
-								Teléfono pendiente de capturar
-							</p>
 						</div>
 					</section>
 
@@ -648,185 +601,186 @@ export default function PanelBoda() {
 							Familias
 						</h2>
 						<p className="text-sm font-semibold text-[var(--color-brand-muted)]">
-							{`${familiasVisibles.length} de ${familias.length}`}{" "}
-							registros
+							{`${familiasVisibles.length} de ${familias.length}`} registros
 						</p>
 					</div>
 
 					<section
-							aria-label="Tabla de familias"
-							className="tile overflow-hidden rounded-lg"
-						>
-							<div className="overflow-x-auto">
-								<table className="w-full min-w-[920px] border-collapse bg-white text-left text-[14px]">
-									<thead>
-										<tr className="border-b border-[var(--color-brand-border)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-brand-muted)]">
-											<th scope="col" className="px-4 py-3 font-bold">
-												Familia
-											</th>
-											<th scope="col" className="px-4 py-3 font-bold">
-												Cupo
-											</th>
-											<th scope="col" className="px-4 py-3 font-bold">
-												Integrantes
-											</th>
-											<th scope="col" className="px-4 py-3 font-bold">
-												Estado
-											</th>
-											<th scope="col" className="px-4 py-3 font-bold">
-												Responsable
-											</th>
-											<th scope="col" className="px-4 py-3 font-bold">
-												Link
-											</th>
-											<th scope="col" className="px-4 py-3 font-bold">
-												<span className="sr-only">Acciones</span>
-											</th>
-										</tr>
-									</thead>
-									<tbody>
-										{familiasVisibles.map((f) => {
-											const lista = integrantesDe(integrantes, f.id_familia);
-											const ok = asistenDe(integrantes, f.id_familia);
-											const estado = estadoFamilia(f, integrantes);
-											const meta = ESTADO_FAMILIA_META[estado];
-											const resp = responsablesDe(integrantes, f.id_familia);
-											const abierto = seleccionada === f.id_familia;
-											return (
-												<tr
-													key={f.id_familia}
-													className={`border-b border-[var(--color-brand-soft)] last:border-0 hover:bg-[var(--color-brand-bg)] ${abierto ? "bg-[var(--color-brand-bg)]" : ""}`}
-												>
-													<td className="px-4 py-3">
-														<div className="flex items-center gap-3">
-															<SelloFamilia estado={estado} />
-															<div className="min-w-0">
-																<p className="font-bold leading-5">
-																	<span className="truncate capitalize">{f.nombre}</span>
-																</p>
-																<p
-																	className="mt-0.5 max-w-[260px] truncate text-[13px] font-medium text-[var(--color-brand-muted)]"
-																	title={f.id_familia}
-																>
-																	{f.id_familia.slice(0, 12)}… ·{" "}
-																	{f.is_family ? "Familia" : "Individual"}
-																</p>
-															</div>
-														</div>
-													</td>
-													<td className="px-4 py-3 font-extrabold">
-														{f.num_invitados}
-													</td>
-													<td className="px-4 py-3">
-														<span className="font-extrabold">
-															{lista.length}/{f.num_invitados}
-														</span>
-														<span
-															className="mt-1 flex h-2 w-24 items-center gap-[3px]"
-															aria-hidden="true"
-														>
-															{Array.from({
-																length: Math.max(f.num_invitados, 1),
-															}).map((_, i) => (
-																<span
-																	key={i}
-																	className="block h-2 flex-1 rounded-full"
-																	style={{
-																		background:
-																			i < lista.length
-																				? "var(--color-brand-dark)"
-																				: "var(--color-brand-border)",
-																	}}
-																/>
-															))}
-														</span>
-														<p className="mt-0.5 text-[12px] font-semibold text-[var(--color-brand-muted)]">
-															{ok} asisten
-														</p>
-													</td>
-													<td className="px-4 py-3">
-														<span
-															className="inline-block rounded-md border px-2 py-1 text-[12px] font-extrabold uppercase tracking-[0.08em]"
-															style={{
-																background: meta.fondo,
-																color: meta.tinta,
-																borderColor: meta.borde,
-															}}
-														>
-															{meta.etiqueta}
-														</span>
-													</td>
-													<td className="px-4 py-3">
-														{resp.length === 0 ? (
-															<span className="text-[13px] font-bold text-[var(--color-clay-ink)]">
-																Sin teléfono
-															</span>
-														) : (
-															resp.map((t) => (
-																<p key={t}>
-																	<a
-																		href={`tel:${t.replace(/\s/g, "")}`}
-																		className="font-semibold text-[var(--color-brand-dark)] hover:underline"
-																	>
-																		{t}
-																	</a>
-																</p>
-															))
-														)}
-													</td>
-													<td className="px-4 py-3">
-														<div className="flex items-center gap-1">
-															<a
-																href={f.link}
-																target="_blank"
-																rel="noreferrer"
-																aria-label={`Abrir invitación de ${f.nombre}`}
-																className="pressable rounded-md p-2 text-[var(--color-brand-dark)] hover:bg-[var(--color-brand-soft)]"
+						aria-label="Tabla de familias"
+						className="tile overflow-hidden rounded-lg"
+					>
+						<div className="overflow-x-auto">
+							<table className="w-full min-w-[920px] border-collapse bg-white text-left text-[14px]">
+								<thead>
+									<tr className="border-b border-[var(--color-brand-border)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-brand-muted)]">
+										<th scope="col" className="px-4 py-3 font-bold">
+											Familia
+										</th>
+										<th scope="col" className="px-4 py-3 font-bold">
+											Cupo
+										</th>
+										<th scope="col" className="px-4 py-3 font-bold">
+											Integrantes
+										</th>
+										<th scope="col" className="px-4 py-3 font-bold">
+											Estado
+										</th>
+										<th scope="col" className="px-4 py-3 font-bold">
+											Teléfono
+										</th>
+										<th scope="col" className="px-4 py-3 font-bold">
+											Link
+										</th>
+										<th scope="col" className="px-4 py-3 font-bold">
+											<span className="sr-only">Acciones</span>
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									{familiasVisibles.map((f) => {
+										const lista = integrantesDe(integrantes, f.id_familia);
+										const ok = asistenDe(integrantes, f.id_familia);
+										const estado = estadoFamilia(f, integrantes);
+										const meta = ESTADO_FAMILIA_META[estado];
+										const resp = responsablesDe(integrantes, f.id_familia);
+										const abierto = seleccionada === f.id_familia;
+										return (
+											<tr
+												key={f.id_familia}
+												className={`border-b border-[var(--color-brand-soft)] last:border-0 hover:bg-[var(--color-brand-bg)] ${abierto ? "bg-[var(--color-brand-bg)]" : ""}`}
+											>
+												<td className="px-4 py-3">
+													<div className="flex items-center gap-3">
+														<SelloFamilia estado={estado} />
+														<div className="min-w-0">
+															<p className="font-bold leading-5">
+																<span className="truncate capitalize">
+																	{f.nombre}
+																</span>
+															</p>
+															<p
+																className="mt-0.5 max-w-[260px] truncate text-[13px] font-medium text-[var(--color-brand-muted)]"
+																title={f.id_familia}
 															>
-																<Icon d={P.enlace} label="Abrir" />
-															</a>
-															<button
-																type="button"
-																onClick={() => {
-																	void navigator.clipboard
-																		?.writeText(f.link)
-																		.then(() => mostrarAviso("Link copiado."));
+																{f.id_familia.slice(0, 12)}… ·{" "}
+																{f.is_family ? "Familia" : "Individual"}
+															</p>
+														</div>
+													</div>
+												</td>
+												<td className="px-4 py-3 font-extrabold">
+													{f.num_invitados}
+												</td>
+												<td className="px-4 py-3">
+													<span className="font-extrabold">
+														{lista.length}/{f.num_invitados}
+													</span>
+													<span
+														className="mt-1 flex h-2 w-24 items-center gap-[3px]"
+														aria-hidden="true"
+													>
+														{Array.from({
+															length: Math.max(f.num_invitados, 1),
+														}).map((_, i) => (
+															<span
+																key={i}
+																className="block h-2 flex-1 rounded-full"
+																style={{
+																	background:
+																		i < lista.length
+																			? "var(--color-brand-dark)"
+																			: "var(--color-brand-border)",
 																}}
-																aria-label={`Copiar link de ${f.nombre}`}
-																className="pressable rounded-md p-2 hover:bg-[var(--color-brand-soft)]"
-																style={{ color: "var(--color-brand-muted)" }}
-															>
-																<Icon d={P.copia} label="Copiar" />
-															</button>
-														</div>
-													</td>
-													<td className="px-4 py-3 text-right">
+															/>
+														))}
+													</span>
+													<p className="mt-0.5 text-[12px] font-semibold text-[var(--color-brand-muted)]">
+														{ok} asisten
+													</p>
+												</td>
+												<td className="px-4 py-3">
+													<span
+														className="inline-block rounded-md border px-2 py-1 text-[12px] font-extrabold uppercase tracking-[0.08em]"
+														style={{
+															background: meta.fondo,
+															color: meta.tinta,
+															borderColor: meta.borde,
+														}}
+													>
+														{meta.etiqueta}
+													</span>
+												</td>
+												<td className="px-4 py-3">
+													{resp.length === 0 ? (
+														<span className="text-[13px] font-bold text-[var(--color-clay-ink)]">
+															Sin teléfono
+														</span>
+													) : (
+														resp.map((t) => (
+															<p key={t}>
+																<a
+																	href={`tel:${t.replace(/\s/g, "")}`}
+																	className="font-semibold text-[var(--color-brand-dark)] hover:underline"
+																>
+																	{t}
+																</a>
+															</p>
+														))
+													)}
+												</td>
+												<td className="px-4 py-3">
+													<div className="flex items-center gap-1">
+														<a
+															href={f.link}
+															target="_blank"
+															rel="noreferrer"
+															aria-label={`Abrir invitación de ${f.nombre}`}
+															className="pressable rounded-md p-2 text-[var(--color-brand-dark)] hover:bg-[var(--color-brand-soft)]"
+														>
+															<Icon d={P.enlace} label="Abrir" />
+														</a>
 														<button
 															type="button"
-															onClick={() =>
-																setSeleccionada(abierto ? null : f.id_familia)
-															}
-															aria-expanded={abierto}
-															aria-label={`Abrir ficha de ${f.nombre}`}
+															onClick={() => {
+																void navigator.clipboard
+																	?.writeText(f.link)
+																	.then(() => mostrarAviso("Link copiado."));
+															}}
+															aria-label={`Copiar link de ${f.nombre}`}
 															className="pressable rounded-md p-2 hover:bg-[var(--color-brand-soft)]"
-															style={{ color: "var(--color-brand-dark)" }}
+															style={{ color: "var(--color-brand-muted)" }}
 														>
-															<Icon
-																d={abierto ? P.x : P.flecha}
-																label="Abrir ficha"
-															/>
+															<Icon d={P.copia} label="Copiar" />
 														</button>
-													</td>
-												</tr>
-											);
-										})}
-									</tbody>
-								</table>
-							</div>
-							<p className="border-t border-[var(--color-brand-border)] bg-[var(--color-brand-bg)] px-4 py-2.5 text-[13px] font-semibold text-[var(--color-brand-muted)]">
-								{familiasVisibles.length} familias · {totales.asisten} asisten ·{" "}
-								{totales.cupo} plazas
-							</p>
+													</div>
+												</td>
+												<td className="px-4 py-3 text-right">
+													<button
+														type="button"
+														onClick={() =>
+															setSeleccionada(abierto ? null : f.id_familia)
+														}
+														aria-expanded={abierto}
+														aria-label={`Abrir ficha de ${f.nombre}`}
+														className="pressable rounded-md p-2 hover:bg-[var(--color-brand-soft)]"
+														style={{ color: "var(--color-brand-dark)" }}
+													>
+														<Icon
+															d={abierto ? P.x : P.flecha}
+															label="Abrir ficha"
+														/>
+													</button>
+												</td>
+											</tr>
+										);
+									})}
+								</tbody>
+							</table>
+						</div>
+						<p className="border-t border-[var(--color-brand-border)] bg-[var(--color-brand-bg)] px-4 py-2.5 text-[13px] font-semibold text-[var(--color-brand-muted)]">
+							{familiasVisibles.length} familias · {totales.asisten} asisten ·{" "}
+							{totales.cupo} plazas
+						</p>
 					</section>
 
 					<footer className="mt-8 text-[13px] leading-6 text-[var(--color-brand-muted)]">
@@ -852,13 +806,12 @@ export default function PanelBoda() {
 							familia={famSel}
 							integrantes={integrantesDe(integrantes, famSel.id_familia)}
 							logs={logs.filter(
-								(l) => l.familia.toLowerCase() === famSel.nombre.toLowerCase(),
+								(l) =>
+									(l.id_familia?.trim() ? l.id_familia === famSel.id_familia : false) ||
+									l.familia.toLowerCase() === famSel.nombre.toLowerCase(),
 							)}
 							onCerrar={() => setSeleccionada(null)}
 							onToggle={(nombre) => toggleAsistencia(famSel.id_familia, nombre)}
-							onGuardarResp={(nombre, tel) =>
-								guardarResponsable(famSel.id_familia, nombre, tel)
-							}
 						/>
 					</aside>
 				</div>
@@ -883,16 +836,13 @@ function FichaFamilia({
 	logs,
 	onCerrar,
 	onToggle,
-	onGuardarResp,
 }: {
 	familia: Familia;
 	integrantes: Integrante[];
 	logs: LogEvento[];
 	onCerrar: () => void;
 	onToggle: (nombre: string) => void;
-	onGuardarResp: (nombre: string, telefono: string) => void;
 }) {
-	const [tels, setTels] = useState<Record<string, string>>({});
 	const estado = ESTADO_FAMILIA_META[estadoFamilia(familia, integrantes)];
 	const asisten = integrantes.filter((i) => i.asistencia).length;
 
@@ -983,32 +933,23 @@ function FichaFamilia({
 								{g.asistencia ? "TRUE" : "FALSE"}
 							</button>
 						</div>
-						<label className="mt-2 block">
-							<span className="mb-1 block text-[12px] font-bold text-[var(--color-brand-muted)]">
-								RESPONSABLE (teléfono)
-							</span>
-							<span className="flex gap-2">
-								<input
-									value={tels[g.nombre] ?? g.responsable}
-									onChange={(e) =>
-										setTels((p) => ({ ...p, [g.nombre]: e.target.value }))
-									}
-									placeholder="+34 …"
-									inputMode="tel"
-									className="w-full rounded-md border border-[var(--color-brand-border)] bg-white px-2 py-1.5 text-sm"
-								/>
-								<button
-									type="button"
-									onClick={() =>
-										onGuardarResp(g.nombre, tels[g.nombre] ?? g.responsable)
-									}
-									aria-label={`Guardar responsable de ${g.nombre}`}
-									className="pressable rounded-md p-2 text-[var(--color-brand-dark)] hover:bg-[var(--color-brand-soft)]"
+						<div className="mt-2">
+							<p className="mb-1 text-[12px] font-bold text-[var(--color-brand-muted)]">
+								RESPONSABLE
+							</p>
+							{g.responsable.trim() ? (
+								<a
+									href={`tel:${g.responsable.replace(/\s/g, "")}`}
+									className="text-sm font-semibold text-[var(--color-brand-dark)] hover:underline"
 								>
-									<Icon d={P.tel} label="Guardar" />
-								</button>
-							</span>
-						</label>
+									{g.responsable}
+								</a>
+							) : (
+								<p className="text-sm font-semibold text-[var(--color-brand-muted)]">
+									Sin teléfono
+								</p>
+							)}
+						</div>
 					</div>
 				))}
 			</div>

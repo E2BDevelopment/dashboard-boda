@@ -21,7 +21,7 @@ export interface Integrante {
 
 export interface LogEvento {
   id_evento: string;
-  id_familia?: string; // ID de familia (columna ID_FAMILIA del LOG real; ausente en la muestra antigua)
+  id_familia?: string; // Columna ID_FAMILIA (orden: ID_EVENTO, ID_FAMILIA, FAMILIA, EVENTO, HORA, FECHA)
   familia: string; // nombre de familia
   evento: string;
   hora: string;
@@ -122,16 +122,16 @@ export const SAMPLE_INTEGRANTES: Integrante[] = [
   { id: "b8f7ab173521de744d0d49487cdea06df5f2c84cc01f95234c2040a987f65602", nombre: "Fam. Carreon Duarte 2", asistencia: false, responsable: "+34 655 201 884" },
 ];
 
-/* Muestra de LOG_INVITADOS con tus columnas: ID_EVENTO, FAMILIA, EVENTO, HORA, FECHA. */
+/* Muestra de LOG_INVITADOS con tu orden: ID_EVENTO, ID_FAMILIA, FAMILIA, EVENTO, HORA, FECHA. */
 export const SAMPLE_LOG: LogEvento[] = [
-  { id_evento: "log-001", familia: "Puente Carreon", evento: "Confirmó asistencia (2 personas)", hora: "10:24", fecha: "2026-09-18" },
-  { id_evento: "log-002", familia: "Carreon Duarte", evento: "Abrió invitación", hora: "11:02", fecha: "2026-09-19" },
-  { id_evento: "log-003", familia: "José Lopez y fam.", evento: "Actualizó responsable +34 600 100 101", hora: "12:40", fecha: "2026-09-20" },
-  { id_evento: "log-004", familia: "Puente Carreon", evento: "Actualizó responsable +34 612 340 118", hora: "09:15", fecha: "2026-09-21" },
-  { id_evento: "log-005", familia: "Ramos Cansino", evento: "Confirmó asistencia (1 persona)", hora: "18:33", fecha: "2026-09-22" },
-  { id_evento: "log-006", familia: "huerta macias", evento: "Abrió invitación", hora: "20:05", fecha: "2026-09-23" },
-  { id_evento: "log-007", familia: "coronado herrera", evento: "Confirmó asistencia (2 personas)", hora: "08:52", fecha: "2026-09-24" },
-  { id_evento: "log-008", familia: "perez carreon", evento: "Pendiente de respuesta", hora: "14:11", fecha: "2026-09-25" },
+  { id_evento: "log-001", id_familia: "d9e806837b230addd933a9f41c7b64e5dd9e65b7d51cff3e137d017be2aca596", familia: "Puente Carreon", evento: "Confirmó asistencia (2 personas)", hora: "10:24", fecha: "2026-09-18" },
+  { id_evento: "log-002", id_familia: "b8f7ab173521de744d0d49487cdea06df5f2c84cc01f95234c2040a987f65602", familia: "Carreon Duarte", evento: "Abrió invitación", hora: "11:02", fecha: "2026-09-19" },
+  { id_evento: "log-003", id_familia: "946c7640c827b9a975d436863ee1ca79e896a5a63582e74fa33b10f8f19f9e5", familia: "José Lopez y fam.", evento: "Actualizó responsable +34 600 100 101", hora: "12:40", fecha: "2026-09-20" },
+  { id_evento: "log-004", id_familia: "d9e806837b230addd933a9f41c7b64e5dd9e65b7d51cff3e137d017be2aca596", familia: "Puente Carreon", evento: "Actualizó responsable +34 612 340 118", hora: "09:15", fecha: "2026-09-21" },
+  { id_evento: "log-005", id_familia: "76024ee20bd61845b32628a17c4edf0371a82e8484216184cec38a1c669cca41", familia: "Ramos Cansino", evento: "Confirmó asistencia (1 persona)", hora: "18:33", fecha: "2026-09-22" },
+  { id_evento: "log-006", id_familia: "57d57ff3cd7d53fc6477b36a88c66cfa0b0272e61229730a1148d407a0d0dd2b", familia: "huerta macias", evento: "Abrió invitación", hora: "20:05", fecha: "2026-09-23" },
+  { id_evento: "log-007", id_familia: "951d49ed780a8feca19003933772fb6829a09883bef12ff6ad2d6926c3a34722", familia: "coronado herrera", evento: "Confirmó asistencia (2 personas)", hora: "08:52", fecha: "2026-09-24" },
+  { id_evento: "log-008", id_familia: "d8191407c1eaaadef094cf9a9776170346d2eaf9d1f16405589b2d046e6ac0", familia: "perez carreon", evento: "Pendiente de respuesta", hora: "14:11", fecha: "2026-09-25" },
 ];
 
 /* Derivados */
@@ -164,12 +164,17 @@ export function estadoFamilia(
   return "parcial";
 }
 
-/** LOG por responsable: cruza LOG.familia con los responsables de sus integrantes. */
+/** LOG por responsable: usa ID_FAMILIA cuando existe; si no, cruza por nombre. */
 export function responsableDeLog(
   log: LogEvento,
   familias: Familia[],
   integrantes: Integrante[],
 ): string[] {
+  if (log.id_familia?.trim()) {
+    const directos = responsablesDe(integrantes, log.id_familia.trim());
+    if (directos.length > 0) return directos;
+    // Aunque haya ID, si no hay responsables se sigue al fallback por nombre.
+  }
   const fam = familias.find(
     (f) => f.nombre.toLowerCase() === log.familia.toLowerCase(),
   );

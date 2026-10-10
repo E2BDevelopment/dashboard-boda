@@ -71,7 +71,7 @@ describe("filasAIntegrantes: rompe si ASISTENCIA no se interpreta como booleano"
   });
 });
 
-describe("filasALog: rompe si cambia el orden ID_EVENTO,FAMILIA,EVENTO,HORA,FECHA", () => {
+describe("filasALog: rompe si cambia el orden ID_EVENTO,ID_FAMILIA,FAMILIA,EVENTO,HORA,FECHA", () => {
   it("mapea las 5 columnas en orden", () => {
     const filas = [
       ["ID_EVENTO", "FAMILIA", "EVENTO", "HORA", "FECHA"],

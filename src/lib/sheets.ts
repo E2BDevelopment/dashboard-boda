@@ -53,31 +53,44 @@ export function filasAIntegrantes(filas: Fila[]): Integrante[] {
   return out;
 }
 
-/** LOG_INVITADOS real: ID_EVENTO, ID_FAMILIA, FAMILIA, EVENTO, HORA, FECHA.
+/** LOG_INVITADOS: ID_EVENTO, ID_FAMILIA, FAMILIA, EVENTO, HORA, FECHA.
+ *  Se resuelve por nombre de cabecera (con fallback posicional a ese orden).
  *  Acepta también el layout antiguo de 5 columnas (sin ID_FAMILIA). */
+function indiceCabecera(cabecera: string[], nombre: string, fallback: number): number {
+  const i = cabecera.indexOf(nombre);
+  return i >= 0 ? i : fallback;
+}
+
 export function filasALog(filas: Fila[]): LogEvento[] {
   const cabecera = (filas[0] ?? []).map((c) => String(c ?? "").trim().toUpperCase());
   const conId = cabecera.includes("ID_FAMILIA") || (filas[1] ?? []).length >= 6;
+  // Orden oficial: ID_EVENTO(0), ID_FAMILIA(1), FAMILIA(2), EVENTO(3), HORA(4), FECHA(5).
+  const iEvento = indiceCabecera(cabecera, "ID_EVENTO", 0);
+  const iFamId = indiceCabecera(cabecera, "ID_FAMILIA", 1);
+  const iFam = conId ? indiceCabecera(cabecera, "FAMILIA", 2) : indiceCabecera(cabecera, "FAMILIA", 1);
+  const iEv = conId ? indiceCabecera(cabecera, "EVENTO", 3) : indiceCabecera(cabecera, "EVENTO", 2);
+  const iHora = conId ? indiceCabecera(cabecera, "HORA", 4) : indiceCabecera(cabecera, "HORA", 3);
+  const iFecha = conId ? indiceCabecera(cabecera, "FECHA", 5) : indiceCabecera(cabecera, "FECHA", 4);
   const out: LogEvento[] = [];
   for (const fila of sinCabecera(filas)) {
-    const id_evento = celda(fila, 0);
+    const id_evento = celda(fila, iEvento);
     if (!id_evento) continue;
     if (conId) {
       out.push({
         id_evento,
-        id_familia: celda(fila, 1),
-        familia: celda(fila, 2),
-        evento: celda(fila, 3),
-        hora: celda(fila, 4),
-        fecha: celda(fila, 5),
+        id_familia: celda(fila, iFamId),
+        familia: celda(fila, iFam),
+        evento: celda(fila, iEv),
+        hora: celda(fila, iHora),
+        fecha: celda(fila, iFecha),
       });
     } else {
       out.push({
         id_evento,
-        familia: celda(fila, 1),
-        evento: celda(fila, 2),
-        hora: celda(fila, 3),
-        fecha: celda(fila, 4),
+        familia: celda(fila, iFam),
+        evento: celda(fila, iEv),
+        hora: celda(fila, iHora),
+        fecha: celda(fila, iFecha),
       });
     }
   }

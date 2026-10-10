@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   title: "Panel de invitados · Boda",
   description:
     "Tablero para la wedding planner: contactos, estados RSVP y seguimiento de invitados.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
