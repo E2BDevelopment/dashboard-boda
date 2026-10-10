@@ -26,6 +26,36 @@ export function getSheetsConfig(): SheetsConfig {
 
 export async function getSheetsClient() {
   const { keyFile } = getSheetsConfig();
+
+  // En Vercel / serverless no hay archivo service.json (está en .gitignore).
+  // Se acepta el JSON completo vía env var GOOGLE_SERVICE_ACCOUNT_JSON o BASE64.
+  const jsonInline = process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim();
+  if (jsonInline) {
+    const credentials = JSON.parse(jsonInline);
+    // Vercel suele pegar la private_key con \n escapados; normalizar por si acaso.
+    if (typeof credentials.private_key === "string") {
+      credentials.private_key = credentials.private_key.replace(/\\n/g, "\n");
+    }
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+    return google.sheets({ version: "v4", auth });
+  }
+
+  const b64 = process.env.GOOGLE_SERVICE_ACCOUNT_BASE64?.trim();
+  if (b64) {
+    const credentials = JSON.parse(Buffer.from(b64, "base64").toString("utf-8"));
+    if (typeof credentials.private_key === "string") {
+      credentials.private_key = credentials.private_key.replace(/\\n/g, "\n");
+    }
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+    return google.sheets({ version: "v4", auth });
+  }
+
   const auth = new google.auth.GoogleAuth({
     keyFile,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
