@@ -1045,9 +1045,6 @@ function FichaFamilia({
 					<h2 className="text-lg font-extrabold tracking-tight">
 						{familia.nombre}
 					</h2>
-					<p className="text-[13px] font-semibold text-[var(--color-brand-muted)]">
-						{familia.id_familia}
-					</p>
 					<p
 						className="mt-1 text-[13px] font-bold"
 						style={{ color: estado.tinta }}
@@ -1164,6 +1161,13 @@ function FichaFamilia({
 					</p>
 				))
 			)}
+			<button
+				type="button"
+				onClick={onCerrar}
+				className="pressable mt-6 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2 text-sm font-bold"
+			>
+				Cerrar ficha
+			</button>
 		</div>
 	);
 }
