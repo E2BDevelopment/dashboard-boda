@@ -210,7 +210,14 @@ export default function PanelBoda() {
 		const { hora, fecha } = hoyPartes();
 		setLogs((prev) => [
 			...prev,
-			{ id_evento: uid("log"), id_familia: idFamilia, familia: familiaNombre, evento, hora, fecha },
+			{
+				id_evento: uid("log"),
+				id_familia: idFamilia,
+				familia: familiaNombre,
+				evento,
+				hora,
+				fecha,
+			},
 		]);
 	}
 
@@ -226,7 +233,8 @@ export default function PanelBoda() {
 					: i,
 			),
 		);
-		if (fam) pushLog(fam.id_familia, fam.nombre, `Cambió asistencia de ${nombre}`);
+		if (fam)
+			pushLog(fam.id_familia, fam.nombre, `Cambió asistencia de ${nombre}`);
 		if (fam) {
 			void guardarAsistenciaRemota(
 				idFamilia,
@@ -347,8 +355,11 @@ export default function PanelBoda() {
 
 			<main className="min-w-0 flex-1">
 				<div
-					className="flex items-center justify-between gap-3 px-4 pt-4 lg:hidden"
-					style={{ color: "var(--color-brand-deep)" }}
+					className="flex items-center justify-between gap-3 px-4 lg:hidden"
+					style={{
+						color: "var(--color-brand-deep)",
+						paddingTop: "max(1rem, env(safe-area-inset-top))",
+					}}
 				>
 					<div className="flex items-center gap-3">
 						<span
@@ -368,15 +379,12 @@ export default function PanelBoda() {
 							Boda · Invitados
 						</p>
 					</div>
-					<span
-						className="rounded-full px-3 py-1 text-xs font-bold text-white"
-						style={{ background: "var(--color-brand-dark)" }}
-					>
-						BD real
-					</span>
 				</div>
 
-				<div className="sticky top-0 z-20 px-4 pt-3 lg:px-8">
+				<div
+					className="sticky top-0 z-20 px-4 pb-2 lg:px-8"
+					style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+				>
 					<div className="tile rounded-lg p-3 sm:p-4">
 						<div className="flex flex-col gap-3">
 							<div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -389,16 +397,18 @@ export default function PanelBoda() {
 										value={busqueda}
 										onChange={(e) => setBusqueda(e.target.value)}
 										placeholder="Buscar familia, integrante, teléfono, ID…"
-										className="w-full rounded-md border border-[var(--color-brand-border)] bg-white py-2.5 pl-10 pr-3 text-[15px] placeholder:text-[var(--color-brand-muted)]"
+										inputMode="search"
+										autoComplete="off"
+										className="min-h-[44px] w-full rounded-md border border-[var(--color-brand-border)] bg-white py-2.5 pl-10 pr-3 text-base placeholder:text-[var(--color-brand-muted)]"
 									/>
 								</label>
-								<div className="flex flex-wrap items-center gap-2">
+								<div className="hidden items-center gap-2 md:flex">
 									<select
 										value={tipoFiltro}
 										onChange={(e) =>
 											setTipoFiltro(e.target.value as TipoFiltro)
 										}
-										className="rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2.5 text-sm font-semibold"
+										className="min-h-[44px] rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2.5 text-sm font-semibold"
 										aria-label="Filtrar por tipo"
 									>
 										<option value="todas">Todas (F + individuales)</option>
@@ -408,7 +418,7 @@ export default function PanelBoda() {
 									<select
 										value={respFiltro}
 										onChange={(e) => setRespFiltro(e.target.value)}
-										className="rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2.5 text-sm font-semibold"
+										className="min-h-[44px] rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2.5 text-sm font-semibold"
 										aria-label="Filtrar por responsable"
 									>
 										<option value="todos">Todos los responsables</option>
@@ -422,7 +432,7 @@ export default function PanelBoda() {
 							</div>
 
 							<div
-								className="flex flex-wrap items-center gap-2"
+								className="chips-scroll -mx-1 flex flex-nowrap items-center gap-2 overflow-x-auto px-1 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0"
 								role="group"
 								aria-label="Filtrar por estado de familia"
 							>
@@ -450,7 +460,7 @@ export default function PanelBoda() {
 											type="button"
 											onClick={() => setEstadoFiltro(e)}
 											aria-pressed={activo}
-											className="pressable inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-bold"
+											className="pressable inline-flex min-h-[44px] shrink-0 snap-start items-center gap-2 rounded-md border px-3 py-2 text-sm font-bold"
 											style={
 												activo
 													? {
@@ -485,11 +495,57 @@ export default function PanelBoda() {
 								})}
 							</div>
 
-							<div className="flex flex-wrap items-center gap-2 border-t border-[var(--color-brand-border)] pt-3">
+							<details className="rounded-md border border-[var(--color-brand-border)] bg-white md:hidden">
+								<summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-bold">
+									Filtros y acciones
+									<span
+										aria-hidden="true"
+										className="rounded-full bg-[var(--color-brand-soft)] px-2 py-0.5 text-xs font-extrabold"
+									>
+										{familiasVisibles.length}
+									</span>
+								</summary>
+								<div className="flex flex-col gap-2 border-t border-[var(--color-brand-border)] p-3">
+									<select
+										value={tipoFiltro}
+										onChange={(e) =>
+											setTipoFiltro(e.target.value as TipoFiltro)
+										}
+										className="min-h-[44px] w-full rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2.5 text-base font-semibold"
+										aria-label="Filtrar por tipo"
+									>
+										<option value="todas">Todas (F + individuales)</option>
+										<option value="familia">Solo familias</option>
+										<option value="individual">Solo individuales</option>
+									</select>
+									<select
+										value={respFiltro}
+										onChange={(e) => setRespFiltro(e.target.value)}
+										className="min-h-[44px] w-full rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2.5 text-base font-semibold"
+										aria-label="Filtrar por responsable"
+									>
+										<option value="todos">Todos los responsables</option>
+										{telefonosResponsables.map((t) => (
+											<option key={t} value={t}>
+												{t}
+											</option>
+										))}
+									</select>
+									<button
+										type="button"
+										onClick={exportar}
+										className="pressable inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2 text-sm font-bold"
+									>
+										<Icon d={P.descarga} label="Descargar" /> Exportar CSV
+									</button>
+								</div>
+							</details>
+
+							<div className="hidden flex-wrap items-center gap-2 border-t border-[var(--color-brand-border)] pt-3 md:flex">
 								<button
 									type="button"
 									onClick={exportar}
-									className="pressable inline-flex items-center gap-2 rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2 text-sm font-bold"
+									className="pressable inline-flex min-h-[44px] items-center gap-2 rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2 text-sm font-bold"
 								>
 									<Icon d={P.descarga} label="Descargar" /> Exportar CSV
 								</button>
@@ -498,7 +554,10 @@ export default function PanelBoda() {
 					</div>
 				</div>
 
-				<div className="px-4 pb-16 lg:px-8">
+				<div
+					className="px-4 lg:px-8"
+					style={{ paddingBottom: "max(4rem, env(safe-area-inset-bottom))" }}
+				>
 					{errorCarga && (
 						<div
 							role="alert"
@@ -521,7 +580,7 @@ export default function PanelBoda() {
 								type="button"
 								onClick={reintentarCarga}
 								disabled={cargando}
-								className="pressable mt-3 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-white disabled:opacity-50"
+								className="pressable mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-white disabled:opacity-50"
 								style={{ background: "var(--color-brand-dark)" }}
 							>
 								{cargando ? "Cargando…" : "Reintentar"}
@@ -543,12 +602,12 @@ export default function PanelBoda() {
 						aria-label="Resumen"
 						className="grid grid-cols-2 gap-3 xl:grid-cols-3"
 					>
-						<div className="tile rounded-lg p-4">
+						<div className="tile order-2 rounded-lg p-4 xl:order-none">
 							<p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--color-brand-muted)]">
 								Familias
 							</p>
 							<p
-								className="mt-1 text-4xl font-extrabold tracking-tight"
+								className="mt-1 text-[2rem] font-extrabold tracking-tight sm:text-4xl"
 								aria-live="polite"
 								key={totales.totalFam}
 							>
@@ -560,7 +619,7 @@ export default function PanelBoda() {
 							</p>
 						</div>
 						<div
-							className="tile rounded-lg p-3"
+							className="tile order-1 col-span-2 rounded-lg p-4 xl:order-none xl:col-span-1"
 							style={{
 								background: "var(--color-brand-deep)",
 								borderColor: "var(--color-brand-deep)",
@@ -571,7 +630,7 @@ export default function PanelBoda() {
 								Asistirán
 							</p>
 							<p
-								className="mt-1 text-4xl font-extrabold tracking-tight"
+								className="mt-1 text-[2rem] font-extrabold tracking-tight sm:text-4xl"
 								aria-live="polite"
 								key={totales.asisten}
 							>
@@ -581,17 +640,20 @@ export default function PanelBoda() {
 								{totales.totalPers} integrantes registrados
 							</p>
 						</div>
-						<div className="tile rounded-lg p-3">
+						<div className="tile order-3 rounded-lg p-4 xl:order-none">
 							<p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--color-brand-muted)]">
 								Cupo total
 							</p>
 							<p
-								className="mt-1 text-4xl font-extrabold tracking-tight"
+								className="mt-1 text-[2rem] font-extrabold tracking-tight sm:text-4xl"
 								style={{ color: "var(--color-sand-ink)" }}
 								aria-live="polite"
 								key={totales.cupo}
 							>
 								<span className="flap">{totales.cupo}</span>
+							</p>
+							<p className="mt-2 text-[13px] font-semibold leading-5 text-[var(--color-brand-muted)]">
+								{totales.asisten} asisten · {totales.cupo} plazas
 							</p>
 						</div>
 					</section>
@@ -606,10 +668,10 @@ export default function PanelBoda() {
 					</div>
 
 					<section
-						aria-label="Tabla de familias"
+						aria-label="Familias"
 						className="tile overflow-hidden rounded-lg"
 					>
-						<div className="overflow-x-auto">
+						<div className="hidden overflow-x-auto md:block">
 							<table className="w-full min-w-[920px] border-collapse bg-white text-left text-[14px]">
 								<thead>
 									<tr className="border-b border-[var(--color-brand-border)] text-[12px] uppercase tracking-[0.12em] text-[var(--color-brand-muted)]">
@@ -735,7 +797,7 @@ export default function PanelBoda() {
 															target="_blank"
 															rel="noreferrer"
 															aria-label={`Abrir invitación de ${f.nombre}`}
-															className="pressable rounded-md p-2 text-[var(--color-brand-dark)] hover:bg-[var(--color-brand-soft)]"
+															className="pressable inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2 text-[var(--color-brand-dark)] hover:bg-[var(--color-brand-soft)]"
 														>
 															<Icon d={P.enlace} label="Abrir" />
 														</a>
@@ -747,7 +809,7 @@ export default function PanelBoda() {
 																	.then(() => mostrarAviso("Link copiado."));
 															}}
 															aria-label={`Copiar link de ${f.nombre}`}
-															className="pressable rounded-md p-2 hover:bg-[var(--color-brand-soft)]"
+															className="pressable inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2 hover:bg-[var(--color-brand-soft)]"
 															style={{ color: "var(--color-brand-muted)" }}
 														>
 															<Icon d={P.copia} label="Copiar" />
@@ -762,7 +824,7 @@ export default function PanelBoda() {
 														}
 														aria-expanded={abierto}
 														aria-label={`Abrir ficha de ${f.nombre}`}
-														className="pressable rounded-md p-2 hover:bg-[var(--color-brand-soft)]"
+														className="pressable inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2 hover:bg-[var(--color-brand-soft)]"
 														style={{ color: "var(--color-brand-dark)" }}
 													>
 														<Icon
@@ -777,20 +839,141 @@ export default function PanelBoda() {
 								</tbody>
 							</table>
 						</div>
+						<div className="flex flex-col gap-3 bg-[var(--color-brand-bg)] p-3 md:hidden">
+							{familiasVisibles.map((f) => {
+								const lista = integrantesDe(integrantes, f.id_familia);
+								const ok = asistenDe(integrantes, f.id_familia);
+								const estado = estadoFamilia(f, integrantes);
+								const meta = ESTADO_FAMILIA_META[estado];
+								const resp = responsablesDe(integrantes, f.id_familia);
+								const abierto = seleccionada === f.id_familia;
+								return (
+									<article
+										key={f.id_familia}
+										aria-label={`Familia ${f.nombre}`}
+										className="tile rounded-lg p-4"
+									>
+										<div className="flex items-start gap-3">
+											<span
+												aria-hidden="true"
+												className="seal flex h-11 w-11 shrink-0 items-center justify-center text-base font-extrabold"
+												style={{
+													background: meta.fondo,
+													color: meta.tinta,
+													borderRadius: 2,
+												}}
+											>
+												{meta.sello}
+											</span>
+											<div className="min-w-0 flex-1">
+												<p className="truncate text-base font-bold capitalize leading-6">
+													{f.nombre}
+												</p>
+												<p className="mt-0.5 truncate text-[13px] font-medium text-[var(--color-brand-muted)]">
+													{f.id_familia.slice(0, 12)}… ·{" "}
+													{f.is_family ? "Familia" : "Individual"} · cupo{" "}
+													{f.num_invitados}
+												</p>
+											</div>
+											<span
+												className="inline-block shrink-0 rounded-md border px-2 py-1 text-[12px] font-extrabold uppercase tracking-[0.08em]"
+												style={{
+													background: meta.fondo,
+													color: meta.tinta,
+													borderColor: meta.borde,
+												}}
+											>
+												{meta.etiqueta}
+											</span>
+										</div>
+										<div className="mt-3 flex items-center gap-3">
+											<span
+												className="flex h-2 flex-1 items-center gap-[3px]"
+												aria-hidden="true"
+											>
+												{Array.from({
+													length: Math.max(f.num_invitados, 1),
+												}).map((_, i) => (
+													<span
+														key={i}
+														className="block h-2 flex-1 rounded-full"
+														style={{
+															background:
+																i < lista.length
+																	? "var(--color-brand-dark)"
+																	: "var(--color-brand-border)",
+														}}
+													/>
+												))}
+											</span>
+											<p className="shrink-0 text-[13px] font-bold text-[var(--color-brand-muted)]">
+												{lista.length}/{f.num_invitados} · {ok} asisten
+											</p>
+										</div>
+										<div className="mt-3 flex flex-col gap-2">
+											{resp.length === 0 ? (
+												<p className="text-sm font-bold text-[var(--color-clay-ink)]">
+													Sin teléfono
+												</p>
+											) : (
+												resp.map((t) => (
+													<a
+														key={t}
+														href={`tel:${t.replace(/\s/g, "")}`}
+														className="pressable inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2 text-base font-bold text-[var(--color-brand-dark)]"
+													>
+														<Icon d={P.tel} label="Llamar" />
+														{t}
+													</a>
+												))
+											)}
+											<div className="flex gap-2">
+												<a
+													href={f.link}
+													target="_blank"
+													rel="noreferrer"
+													aria-label={`Abrir invitación de ${f.nombre}`}
+													className="pressable inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2 text-sm font-bold"
+												>
+													<Icon d={P.enlace} label="Abrir" /> Invitación
+												</a>
+												<button
+													type="button"
+													onClick={() =>
+														setSeleccionada(abierto ? null : f.id_familia)
+													}
+													aria-expanded={abierto}
+													aria-label={`Abrir ficha de ${f.nombre}`}
+													className="pressable inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-white"
+													style={{ background: "var(--color-brand-dark)" }}
+												>
+													Ver ficha
+												</button>
+											</div>
+										</div>
+									</article>
+								);
+							})}
+							{familiasVisibles.length === 0 && (
+								<p className="rounded-md border border-dashed border-[var(--color-brand-border)] bg-white p-4 text-center text-sm font-semibold text-[var(--color-brand-muted)]">
+									Sin familias para estos filtros.
+								</p>
+							)}
+						</div>
 						<p className="border-t border-[var(--color-brand-border)] bg-[var(--color-brand-bg)] px-4 py-2.5 text-[13px] font-semibold text-[var(--color-brand-muted)]">
 							{familiasVisibles.length} familias · {totales.asisten} asisten ·{" "}
 							{totales.cupo} plazas
 						</p>
 					</section>
-
-					<footer className="mt-8 text-[13px] leading-6 text-[var(--color-brand-muted)]">
-						<p>Datos en vivo de BD_INVITADOS desde el Google Sheet.</p>
-					</footer>
 				</div>
 			</main>
 
 			{famSel && (
-				<div className="fixed inset-0 z-30" role="presentation">
+				<div
+					className="fixed inset-0 z-30"
+					role="presentation"
+					style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+				>
 					<button
 						type="button"
 						aria-label="Cerrar panel"
@@ -800,14 +983,20 @@ export default function PanelBoda() {
 					/>
 					<aside
 						aria-label={`Ficha de ${famSel.nombre}`}
-						className="absolute right-0 top-0 flex h-full w-full max-w-[440px] flex-col overflow-y-auto border-l border-[var(--color-brand-border)] bg-white p-5 shadow-2xl"
+						className="sheet-enter absolute inset-x-0 bottom-0 flex max-h-[92dvh] w-full flex-col overflow-y-auto rounded-t-2xl border-t border-[var(--color-brand-border)] bg-white px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-2 shadow-2xl md:inset-x-auto md:bottom-auto md:right-0 md:top-0 md:h-full md:max-h-none md:max-w-[440px] md:rounded-t-none md:border-l md:border-t-0 md:pt-5"
 					>
+						<div
+							aria-hidden="true"
+							className="mx-auto mb-2 h-1 w-10 shrink-0 rounded-full bg-[var(--color-brand-border)] md:hidden"
+						/>
 						<FichaFamilia
 							familia={famSel}
 							integrantes={integrantesDe(integrantes, famSel.id_familia)}
 							logs={logs.filter(
 								(l) =>
-									(l.id_familia?.trim() ? l.id_familia === famSel.id_familia : false) ||
+									(l.id_familia?.trim()
+										? l.id_familia === famSel.id_familia
+										: false) ||
 									l.familia.toLowerCase() === famSel.nombre.toLowerCase(),
 							)}
 							onCerrar={() => setSeleccionada(null)}
@@ -820,8 +1009,11 @@ export default function PanelBoda() {
 			{aviso && (
 				<p
 					role="status"
-					className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-md px-4 py-2 text-sm font-bold text-white shadow-lg"
-					style={{ background: "var(--color-brand-deep)" }}
+					className="fixed left-1/2 z-40 -translate-x-1/2 rounded-md px-4 py-2 text-sm font-bold text-white shadow-lg"
+					style={{
+						background: "var(--color-brand-deep)",
+						bottom: "max(1rem, env(safe-area-inset-bottom))",
+					}}
 				>
 					{aviso}
 				</p>
@@ -868,7 +1060,7 @@ function FichaFamilia({
 					type="button"
 					onClick={onCerrar}
 					aria-label="Cerrar panel"
-					className="pressable rounded-md p-2 hover:bg-[var(--color-brand-soft)]"
+					className="pressable inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2 hover:bg-[var(--color-brand-soft)]"
 				>
 					<Icon d={P.x} label="Cerrar" />
 				</button>
@@ -879,7 +1071,7 @@ function FichaFamilia({
 					href={familia.link}
 					target="_blank"
 					rel="noreferrer"
-					className="pressable inline-flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-white"
+					className="pressable inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-white"
 					style={{ background: "var(--color-brand-dark)" }}
 				>
 					<Icon d={P.enlace} label="Abrir" /> Abrir invitación
@@ -889,7 +1081,7 @@ function FichaFamilia({
 					onClick={() => {
 						void navigator.clipboard?.writeText(familia.link);
 					}}
-					className="pressable inline-flex items-center gap-2 rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2 text-sm font-bold"
+					className="pressable inline-flex min-h-[44px] items-center gap-2 rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2 text-sm font-bold"
 				>
 					<Icon d={P.copia} label="Copiar" /> Copiar
 				</button>
@@ -915,7 +1107,7 @@ function FichaFamilia({
 								type="button"
 								onClick={() => onToggle(g.nombre)}
 								aria-pressed={g.asistencia}
-								className="pressable rounded-md border px-2 py-1 text-[12px] font-extrabold uppercase"
+								className="pressable inline-flex min-h-[44px] items-center rounded-md border px-3 py-1 text-[12px] font-extrabold uppercase"
 								style={
 									g.asistencia
 										? {
@@ -940,7 +1132,7 @@ function FichaFamilia({
 							{g.responsable.trim() ? (
 								<a
 									href={`tel:${g.responsable.replace(/\s/g, "")}`}
-									className="text-sm font-semibold text-[var(--color-brand-dark)] hover:underline"
+									className="inline-flex min-h-[44px] items-center py-1 text-base font-semibold text-[var(--color-brand-dark)] hover:underline"
 								>
 									{g.responsable}
 								</a>

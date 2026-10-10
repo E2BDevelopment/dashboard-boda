@@ -45,6 +45,8 @@ body {
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
   caret-color: var(--color-brand-dark);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* Browser surfaces carry the design too */
@@ -113,6 +115,47 @@ a {
   }
 }
 
+@keyframes sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.sheet-enter {
+  animation: sheet-up 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Mobile chips: horizontal snap scroll; desktop wraps */
+.chips-scroll {
+  scrollbar-width: none;
+}
+.chips-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .pressable {
+    min-height: 44px;
+  }
+  input,
+  select,
+  button {
+    font-size-adjust: none;
+  }
+}
+
+@media (hover: none) {
+  /* Touch: no hover lift, active press only */
+  .tile:hover {
+    transform: none;
+  }
+}
+
 .flap {
   display: inline-block;
   animation: flap 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -132,6 +175,9 @@ a {
 
 @media (prefers-reduced-motion: reduce) {
   .flap {
+    animation: none;
+  }
+  .sheet-enter {
     animation: none;
   }
   .pressable,
