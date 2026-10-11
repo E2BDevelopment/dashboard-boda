@@ -200,6 +200,56 @@ export function toCsvLog(logs: LogEvento[]): string {
   return [head, ...logs.map((l) => [l.id_evento, l.id_familia ?? "", l.familia, l.evento, l.hora, l.fecha].join(";"))].join("\n");
 }
 
+/** Mensaje de invitación para copiar desde la ficha de familia, con el link personalizado al final. */
+export function mensajeInvitacion(link: string): string {
+  return [
+    "¡Nos casamos! 🥹💍❤️",
+    "Estamos muy felices de compartir contigo esta etapa tan bonita de nuestras vidas. Queremos celebrar nuestro amor rodeados de personas especiales, y nos encantaría que tú fueras parte de este día. 🤍✨",
+    "Te compartimos nuestra invitación con muchísimo cariño. 💌",
+    "Por favor, ayúdanos confirmando tu asistencia antes del 6 de noviembre para poder organizarnos y preparar todo con mucho amor.",
+    "¡Esperamos verte y compartir contigo nuestra felicidad! 💒",
+    "Natalia & Enrique ♡",
+    link.trim(),
+  ].join("\n\n");
+}
+
+/**
+ * Copia texto al portapapeles de forma robusta:
+ * 1) intenta navigator.clipboard.writeText (requiere contexto seguro),
+ * 2) fallback con textarea + execCommand para http / Safari / permisos denegados.
+ * Devuelve true si copió, false si no pudo. Nunca lanza.
+ */
+export async function copiarTexto(texto: string): Promise<boolean> {
+  try {
+    const nav = globalThis.navigator as Navigator | undefined;
+    if (nav?.clipboard?.writeText) {
+      await nav.clipboard.writeText(texto);
+      return true;
+    }
+  } catch {
+    /* sigue al fallback */
+  }
+  try {
+    const doc = globalThis.document as Document | undefined;
+    if (!doc) return false;
+    const ta = doc.createElement("textarea");
+    ta.value = texto;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "0";
+    ta.style.opacity = "0";
+    doc.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+    const ok = doc.execCommand("copy");
+    doc.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 /** Formato esperado del JSON de tu Google Apps Script (Web App). */
 export interface BdResponse {
   familias: Familia[];

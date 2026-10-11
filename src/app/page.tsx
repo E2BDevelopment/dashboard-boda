@@ -11,6 +11,8 @@ import {
 	toCsvFamilias,
 	fetchBdInterno,
 	guardarAsistenciaRemota,
+	copiarTexto,
+	mensajeInvitacion,
 	uid,
 	hoyPartes,
 	type Familia,
@@ -266,10 +268,9 @@ export default function PanelBoda() {
 			mostrarAviso("Nada que copiar.");
 			return;
 		}
-		void navigator.clipboard
-			?.writeText(lineas.join("\n"))
-			.then(() => mostrarAviso(`${lineas.length} links copiados.`))
-			.catch(() => mostrarAviso("No se pudo copiar."));
+		void copiarTexto(lineas.join("\n")).then((ok) =>
+			mostrarAviso(ok ? `${lineas.length} links copiados.` : "No se pudo copiar."),
+		);
 	}
 
 	return (
@@ -804,9 +805,9 @@ export default function PanelBoda() {
 														<button
 															type="button"
 															onClick={() => {
-																void navigator.clipboard
-																	?.writeText(f.link)
-																	.then(() => mostrarAviso("Link copiado."));
+																void copiarTexto(f.link).then((ok) =>
+																	mostrarAviso(ok ? "Link copiado." : "No se pudo copiar."),
+																);
 															}}
 															aria-label={`Copiar link de ${f.nombre}`}
 															className="pressable inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2 hover:bg-[var(--color-brand-soft)]"
@@ -1001,6 +1002,7 @@ export default function PanelBoda() {
 							)}
 							onCerrar={() => setSeleccionada(null)}
 							onToggle={(nombre) => toggleAsistencia(famSel.id_familia, nombre)}
+							onAviso={mostrarAviso}
 						/>
 					</aside>
 				</div>
@@ -1028,12 +1030,14 @@ function FichaFamilia({
 	logs,
 	onCerrar,
 	onToggle,
+	onAviso,
 }: {
 	familia: Familia;
 	integrantes: Integrante[];
 	logs: LogEvento[];
 	onCerrar: () => void;
 	onToggle: (nombre: string) => void;
+	onAviso?: (texto: string) => void;
 }) {
 	const estado = ESTADO_FAMILIA_META[estadoFamilia(familia, integrantes)];
 	const asisten = integrantes.filter((i) => i.asistencia).length;
@@ -1063,24 +1067,41 @@ function FichaFamilia({
 				</button>
 			</div>
 
-			<div className="mt-3 flex gap-2">
-				<a
-					href={familia.link}
-					target="_blank"
-					rel="noreferrer"
-					className="pressable inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-white"
-					style={{ background: "var(--color-brand-dark)" }}
-				>
-					<Icon d={P.enlace} label="Abrir" /> Abrir invitación
-				</a>
+			<div className="mt-3 flex flex-col gap-2">
+				<div className="flex gap-2">
+					<a
+						href={familia.link}
+						target="_blank"
+						rel="noreferrer"
+						className="pressable inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-white"
+						style={{ background: "var(--color-brand-dark)" }}
+					>
+						<Icon d={P.enlace} label="Abrir" /> Abrir invitación
+					</a>
+					<button
+						type="button"
+						onClick={() => {
+							void copiarTexto(familia.link).then((ok) =>
+								onAviso?.(ok ? "Link copiado." : "No se pudo copiar."),
+							);
+						}}
+						className="pressable inline-flex min-h-[44px] items-center gap-2 rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2 text-sm font-bold"
+					>
+						<Icon d={P.copia} label="Copiar" /> Copiar
+					</button>
+				</div>
 				<button
 					type="button"
 					onClick={() => {
-						void navigator.clipboard?.writeText(familia.link);
+						void copiarTexto(mensajeInvitacion(familia.link)).then((ok) =>
+							onAviso?.(ok ? "Mensaje copiado." : "No se pudo copiar."),
+						);
 					}}
-					className="pressable inline-flex min-h-[44px] items-center gap-2 rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2 text-sm font-bold"
+					aria-label={`Copiar mensaje de invitación para ${familia.nombre}`}
+					className="pressable inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-md border border-[var(--color-brand-border)] bg-white px-3 py-2 text-sm font-bold"
+					style={{ color: "var(--color-brand-dark)" }}
 				>
-					<Icon d={P.copia} label="Copiar" /> Copiar
+					<Icon d={P.copia} label="Copiar" /> Copiar mensaje
 				</button>
 			</div>
 
